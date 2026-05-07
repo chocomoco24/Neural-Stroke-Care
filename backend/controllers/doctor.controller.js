@@ -1,7 +1,7 @@
 const User = require("../models/User");
 const PatientRecord = require("../models/PatientRecord");
 
-// Converts MongoDB user → shape the old UI expects
+
 function formatUser(u) {
   if (!u) return null;
   return {

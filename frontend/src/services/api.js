@@ -27,7 +27,7 @@ api.interceptors.response.use(
   }
 );
 
-// ── Auth ──────────────────────────────────────────────
+// Auth
 export const authService = {
   login:  (userType, email, password) =>
     api.post('/auth/login', { email, password, userType }),
@@ -43,35 +43,35 @@ export const authService = {
   me: () => api.get('/auth/me'),
 };
 
-// ── Prediction ────────────────────────────────────────
+// Prediction 
 export const predictionService = {
   predict: (data) => api.post('/predict', data),
 };
 
-// ── Dashboard ─────────────────────────────────────────
+// Dashboard 
 export const dashboardService = {
   patientDashboard: () => api.get('/dashboard/patient'),
   doctorDashboard:  () => api.get('/dashboard/doctor'),
 };
 
-// ── Doctors ───────────────────────────────────────────
+// Doctors 
 export const doctorService = {
   list:               (params) => api.get('/doctors', { params }),
   toggleAvailability: (data)   => api.post('/doctors/toggle-availability', data),
   specializations:    ()       => api.get('/doctors/specializations'),
 };
 
-// ── Patients ──────────────────────────────────────────
+//Patients 
 export const patientService = {
   records: () => api.get('/patients'),
 };
 
-// ── History ───────────────────────────────────────────
+// History 
 export const historyService = {
   list: () => api.get('/predict/history'),
 };
 
-// ── Hospitals ─────────────────────────────────────────
+// Hospitals
 export const hospitalService = {
   nearby: (lat, lon) => api.get('/hospitals', { params: { lat, lon } }),
 };

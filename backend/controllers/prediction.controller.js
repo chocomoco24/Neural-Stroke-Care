@@ -20,7 +20,7 @@ const SMOKING_MAP   = {
   "unknown":         "Unknown",
 };
 
-// Converts a MongoDB record to the snake_case shape the old UI expects
+
 function formatRecord(r) {
   if (!r) return null;
   return {
@@ -100,7 +100,7 @@ const predict = async (req, res) => {
 };
 
 // GET /predict/history
-// Returns a plain array so the UI can read r.data directly
+
 const getHistory = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 0;

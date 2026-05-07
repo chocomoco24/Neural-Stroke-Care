@@ -1,4 +1,4 @@
-/* ── Neural Stroke Care – Global Styles ── */
+/* Global Styles */
 
 :root {
   --clr-bg:        #0b0f1a;
@@ -34,7 +34,7 @@ body {
   line-height: 1.6;
 }
 
-/* ── App Shell ── */
+/*App Shell*/
 .app-bg {
   min-height: 100vh;
   background:
@@ -43,7 +43,7 @@ body {
     var(--clr-bg);
 }
 
-/* ── Navbar ── */
+/*Navbar*/
 .app-navbar {
   background: rgba(11,15,26,0.85);
   backdrop-filter: blur(16px);
@@ -131,7 +131,7 @@ body {
   .nav-links a { display: block; width: 100%; padding: 0.6rem 1rem; }
 }
 
-/* ── Buttons ── */
+/*Buttons*/
 .btn {
   display: inline-flex;
   align-items: center;
@@ -180,7 +180,7 @@ body {
 
 .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
 
-/* ── Cards / Surfaces ── */
+/* Cards / Surfaces*/
 .surface {
   background: var(--clr-surface);
   border: 1px solid var(--clr-border);
@@ -196,7 +196,7 @@ body {
   padding: 1.75rem;
 }
 
-/* ── Page Shell ── */
+/* Page Shell */
 .page-shell {
   max-width: 1200px;
   margin: 0 auto;
@@ -209,7 +209,7 @@ body {
   padding: 2rem 1.5rem 4rem;
 }
 
-/* ── Auth ── */
+/* Auth */
 .auth-shell {
   min-height: calc(100vh - 70px);
   display: flex;
@@ -253,7 +253,7 @@ body {
   margin-bottom: 2rem;
 }
 
-/* ── Forms ── */
+/*Forms */
 .form-stack { display: flex; flex-direction: column; gap: 1.1rem; }
 
 .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
@@ -314,7 +314,7 @@ body {
 
 .form-hint { color: var(--clr-muted); font-size: 0.8rem; }
 
-/* ── Input Grid (prediction form) ── */
+/* Input Grid (prediction form) */
 .input-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -322,7 +322,7 @@ body {
   margin-bottom: 1.5rem;
 }
 
-/* ── Flash / Alert ── */
+/* Flash / Alert */
 .flash-stack {
   position: fixed;
   top: 80px;
@@ -360,7 +360,7 @@ body {
   cursor: pointer; font-size: 1rem; flex-shrink: 0;
 }
 
-/* ── Tables ── */
+/* Tables */
 .table-card {
   background: var(--clr-surface);
   border: 1px solid var(--clr-border);
@@ -406,7 +406,7 @@ body {
 
 .table-modern tr:hover td { background: rgba(255,255,255,0.02); }
 
-/* ── Badges ── */
+/* Badges */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -427,7 +427,7 @@ body {
 .avail-pill.online  { background: rgba(34,197,94,0.15);  color: #4ade80; border: 1px solid rgba(34,197,94,0.3); }
 .avail-pill.offline { background: rgba(148,163,184,0.1); color: var(--clr-muted); border: 1px solid rgba(148,163,184,0.2); }
 
-/* ── Spinner ── */
+/*  Spinner */
 .spinner-wrap { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4rem 1rem; gap: 1rem; }
 .spinner {
   width: 44px; height: 44px;
@@ -438,7 +438,7 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Hero / Landing ── */
+/*Hero / Landing */
 .hero-section {
   padding: 4rem 0 2rem;
 }
@@ -475,7 +475,7 @@ body {
 
 .hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 
-/* ── Feature grid ── */
+/* Feature grid */
 .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; }
 .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; }
 .grid-4 { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; }
@@ -483,7 +483,7 @@ body {
 .feature-card { padding: 1.25rem; }
 .feature-card h5 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
 
-/* ── Welcome card ── */
+/* Welcome card */
 .welcome-card {
   background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(6,182,212,0.08));
   border: 1px solid rgba(59,130,246,0.25);
@@ -494,7 +494,7 @@ body {
 
 .welcome-card h1 { font-family: var(--font-display); font-size: 2rem; }
 
-/* ── Stat tiles ── */
+/* Stat tiles */
 .stat-tile {
   background: var(--clr-surface2);
   border: 1px solid var(--clr-border);
@@ -505,7 +505,7 @@ body {
 .stat-tile .val { font-family: var(--font-display); font-size: 2rem; color: var(--clr-primary); }
 .stat-tile .lbl { font-size: 0.78rem; color: var(--clr-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.25rem; }
 
-/* ── Result page ── */
+/* Result page */
 .result-state {
   display: inline-block;
   padding: 0.75rem 2rem;
@@ -516,11 +516,11 @@ body {
 .result-state--high { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.35); }
 .result-state--low  { background: rgba(34,197,94,0.15);  color: #4ade80; border: 1px solid rgba(34,197,94,0.35); }
 
-/* ── Gauge ── */
+/* Gauge */
 .gauge-wrap { width: 260px; margin: 1rem auto; }
 .gauge-wrap svg { width: 100%; }
 
-/* ── Hospital card ── */
+/* Hospital card*/
 .hospital-card {
   background: var(--clr-surface2);
   border: 1px solid var(--clr-border);
@@ -540,7 +540,7 @@ body {
   margin-top: 0.35rem;
 }
 
-/* ── Dashboard layout ── */
+/*Dashboard layout*/
 .dashboard-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -548,7 +548,7 @@ body {
 }
 @media (max-width: 768px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
-/* ── Doctor card ── */
+/* Doctor card*/
 .doctor-card {
   background: var(--clr-surface);
   border: 1px solid var(--clr-border);
@@ -562,7 +562,7 @@ body {
 .doctor-card:hover { box-shadow: var(--shadow-sm); }
 .doctor-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
 
-/* ── Footer ── */
+/* Footer */
 .app-footer {
   text-align: center;
   padding: 1.5rem;
@@ -572,7 +572,7 @@ body {
   margin-top: auto;
 }
 
-/* ── Empty state ── */
+/* Empty state */
 .empty-state {
   text-align: center;
   padding: 3rem 1rem;
@@ -580,17 +580,17 @@ body {
 }
 .empty-state i { font-size: 3rem; opacity: 0.4; margin-bottom: 1rem; display: block; }
 
-/* ── Section heading ── */
+/*   Section heading   */
 .section-title {
   font-family: var(--font-display);
   font-size: 1.6rem;
   margin-bottom: 0.35rem;
 }
 
-/* ── Divider ── */
+/*   Divider   */
 .divider { border: none; border-top: 1px solid var(--clr-border); margin: 1.25rem 0; }
 
-/* ── Row / col utils ── */
+/*   Row / col utils   */
 .row-between { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
 .text-muted  { color: var(--clr-muted); }
 .text-small  { font-size: 0.82rem; }
@@ -612,7 +612,7 @@ body {
 .text-danger { color: var(--clr-danger); }
 .text-success { color: var(--clr-success); }
 
-/* ── Animations ── */
+/*   Animations   */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }

@@ -1,7 +1,7 @@
 const PatientRecord = require("../models/PatientRecord");
 const User = require("../models/User");
 
-// Converts MongoDB record → shape the old UI expects
+
 function formatRecord(r) {
   if (!r) return null;
   return {
@@ -22,7 +22,7 @@ function formatRecord(r) {
   };
 }
 
-// Converts MongoDB user → shape the old UI expects
+
 function formatUser(u) {
   if (!u) return null;
   return {

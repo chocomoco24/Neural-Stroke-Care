@@ -6,7 +6,7 @@ const signToken = (id) =>
     expiresIn: process.env.JWT_EXPIRES_IN || "7d",
   });
 
-// Converts user → shape the old UI expects (user_type instead of userType)
+
 function formatUser(u) {
   const obj = u.toJSON ? u.toJSON() : { ...u };
   return {
