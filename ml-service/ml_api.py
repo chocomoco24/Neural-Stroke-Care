@@ -11,11 +11,11 @@ import joblib
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
-# ── Imblearn shim ─────────────────────────────────────────────────────────────
+# Imblearn shim 
 class _AnyClass:
     def __init__(self, *a, **kw): pass
     def fit(self, X, y=None): return self
@@ -51,7 +51,7 @@ for _path in [
 ]:
     sys.modules[_path] = _SmartFakeModule(_path)
 
-# ── Load model ────────────────────────────────────────────────────────────────
+# Load model 
 MODEL_PATH = os.getenv("MODEL_PATH", "model.joblib")
 
 try:
@@ -75,7 +75,7 @@ try:
 except Exception as exc:
     raise RuntimeError(f"[ML Service] Could not load model: {exc}") from exc
 
-# ── App ───────────────────────────────────────────────────────────────────────
+# App 
 app = FastAPI(title="Stroke Prediction ML API", version="1.0.0")
 
 app.add_middleware(
@@ -85,7 +85,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── Value maps — must match EXACTLY what the model was trained on ─────────────
+#  Value maps — must match EXACTLY what the model was trained on 
 # Categorical values are case-sensitive — do NOT lowercase them
 
 GENDER_MAP = {
@@ -121,7 +121,7 @@ SMOKING_MAP = {
     "unknown":         "Unknown",
 }
 
-# ── Schemas ───────────────────────────────────────────────────────────────────
+# Schemas 
 class PredictRequest(BaseModel):
     gender: str
     age: int = Field(..., ge=0, le=120)
@@ -138,7 +138,7 @@ class PredictResponse(BaseModel):
     result: str
     probability: float
 
-# ── Endpoints ─────────────────────────────────────────────────────────────────
+# Endpoints 
 @app.get("/health")
 def health():
     return {"status": "ok", "model": MODEL_PATH}
