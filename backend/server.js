@@ -39,7 +39,10 @@ app.use((err, _req, res, _next) => {
 //Database + Start
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose.connect(process.env.MONGO_URI,{
+  tls: true,
+  tlsAllowInvalidCertificates: true,
+})
   .then(() => {
     console.log("[MongoDB] Connected: " + mongoose.connection.host);
     app.listen(PORT, () => console.log(`[Server] Running on port ${PORT}`));
