@@ -9,7 +9,7 @@ export default function TestHistory() {
 
   useEffect(() => {
     historyService.list()
-      .then(r => setTests(r.data?.records ||r.data || []))
+      .then(r => setTests(r.data?.records ?? r.data ?? []))
       .catch(() => setTests([]))
       .finally(() => setLoading(false));
   }, []);

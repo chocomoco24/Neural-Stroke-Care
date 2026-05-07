@@ -38,6 +38,7 @@ export const authService = {
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('nsc_user');
+    return Promise.resolve();
   },
 
   me: () => api.get('/auth/me'),

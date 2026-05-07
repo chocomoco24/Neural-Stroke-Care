@@ -6,6 +6,8 @@ frontend/node_modules/
 # Environment files 
 backend/.env
 frontend/.env
+ml-service/.venv/
+ml-service/venv/
 
 # Build output 
 frontend/build/
@@ -13,6 +15,7 @@ frontend/build/
 # Logs 
 backend/*.log
 frontend/*.log
+ml-service/__pycache__/
 
 # OS junk 
 .DS_Store

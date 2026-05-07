@@ -25,5 +25,7 @@ export function FlashProvider({ children }) {
 }
 
 export function useFlash() {
-  return useContext(FlashContext);
+  const ctx = useContext(FlashContext);
+  if (!ctx) throw new Error('useFlash must be used within FlashProvider');
+  return ctx;
 }
