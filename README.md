@@ -593,12 +593,14 @@ This runs:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/Neural_Stroke_Care_MERN.git
-cd Neural_Stroke_Care_MERN
+git clone https://github.com/chocomoco24/Neural-Stroke-Care.git
+cd Neural-Stroke-Care
 
-# 2. Set up backend environment variables
+# 2. Set up backend and frontend environment variables
 cp backend/.env.example backend/.env
-# Edit backend/.env with your MongoDB URI and JWT secret
+cp frontend/.env.example frontend/.env
+
+# Edit backend/.env with your MongoDB URL and JWT secret
 
 # 3. Install all Node dependencies
 npm install
