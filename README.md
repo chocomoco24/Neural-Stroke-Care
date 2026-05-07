@@ -476,7 +476,7 @@ REACT_APP_API_URL=http://localhost:5000
 
 ---
 
-## 🚀 Running Each Service Independently
+## 🚀 Running Each Service Independently {RECOMMENDED FOR THE FIRST TIME}
 
 ### 1. ML Service (Python/FastAPI)
 
@@ -486,16 +486,16 @@ The ML service must be running before the backend can process predictions.
 # Navigate to the ml-service directory
 cd ml-service
 
-# Create a virtual environment
+# Create a virtual environment{ONLY FOR THE FIRST TIME}
 python -m venv .venv
 
-# Activate the virtual environment
+# Activate the virtual environment{ONLY FOR THE FIRST TIME}
 # On Windows:
 .venv\Scripts\activate
 # On macOS/Linux:
 source .venv/bin/activate
 
-# Install dependencies
+# Install dependencies{ONLY FOR THE FIRST TIME}
 pip install -r requirements.txt
 
 # Start the FastAPI server (runs on port 5001)
@@ -572,7 +572,10 @@ The root `package.json` uses **concurrently** to spin up all three services with
 ```bash
 # From the project root directory
 
-# Install the root devDependencies (concurrently)
+# Create environment for the ML Model {ONLY FOR THE FIRST TIME}
+npm run ml-setup
+
+# Install the root devDependencies (Run it inside the frontend and backend folders) {ONLY FOR THE FIRST TIME}
 npm install
 
 # Start all three services simultaneously
@@ -590,12 +593,14 @@ This runs:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-username/Neural_Stroke_Care_MERN.git
-cd Neural_Stroke_Care_MERN
+git clone https://github.com/chocomoco24/Neural-Stroke-Care.git
+cd Neural-Stroke-Care
 
-# 2. Set up backend environment variables
+# 2. Set up backend and frontend environment variables
 cp backend/.env.example backend/.env
-# Edit backend/.env with your MongoDB URI and JWT secret
+cp frontend/.env.example frontend/.env
+
+# Edit backend/.env with your MongoDB URL and JWT secret
 
 # 3. Install all Node dependencies
 npm install
