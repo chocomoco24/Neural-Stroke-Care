@@ -66,7 +66,7 @@ const predict = async (req, res) => {
     const mlResponse = await axios.post(
       `${process.env.ML_API_URL}/predict`,
       mlPayload,
-      { timeout: 15000 }
+      { timeout: 60000 }
     );
 
     const { result, probability } = mlResponse.data;
