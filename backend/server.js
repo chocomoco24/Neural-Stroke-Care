@@ -15,7 +15,20 @@ const patientsRoutes   = require("./routes/patients.routes");
 const app = express();
 
 //Middleware
-app.use(cors({ origin: process.env.FRONTEND_URL || "http://localhost:3000", credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowed = [
+      "http://localhost:3000",
+      "https://neural-stroke-care.vercel.app",
+    ];
+    if (!origin || allowed.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(morgan("dev"));
 
