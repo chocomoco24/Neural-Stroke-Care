@@ -27,7 +27,7 @@ app.use("/doctors", doctorRoutes);
 app.use("/hospitals", hospitalRoutes);
 app.use("/patients",  patientsRoutes);
 
-
+app.get('/', (_req, res) => res.json({ message: 'API is running' }));
 app.get("/health", (_req, res) => res.json({ status: "ok" }));
 
 //Global error handler
