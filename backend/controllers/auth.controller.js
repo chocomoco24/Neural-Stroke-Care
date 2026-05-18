@@ -1,53 +1,54 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/User");
+const Patient = require("../models/Patient");
+const Doctor = require("../models/Doctor");
 
-const signToken = (id) =>
-  jwt.sign({ id }, process.env.JWT_SECRET, {
+// Now includes role in the token so middleware knows which collection to query
+const signToken = (id, role) =>
+  jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || "7d",
   });
 
-
-function formatUser(u) {
+function formatUser(u, userType) {
   const obj = u.toJSON ? u.toJSON() : { ...u };
   return {
     ...obj,
-    user_type:      u.userType,
-    is_available:   u.isAvailable,
-    available_from: u.availableFrom,
-    available_to:   u.availableTo,
+    user_type:      userType,
+    is_available:   u.isAvailable   ?? undefined,
+    available_from: u.availableFrom ?? undefined,
+    available_to:   u.availableTo   ?? undefined,
   };
 }
 
 // POST /auth/signup
 const signup = async (req, res) => {
   try {
-    const {
-      name, email, password, userType,
-      specialization, isAvailable, is_available,
-      availableFrom, available_from,
-      availableTo, available_to,
-    } = req.body;
+    const { name, email, password, userType, specialization, isAvailable, availableFrom, availableTo } = req.body;
 
-    const validTypes = ["patient", "doctor"];
-    if (!validTypes.includes(userType)) {
-      return res.status(400).json({ message: "Invalid account type" });
+    if (userType === "patient") {
+      const exists = await Patient.findOne({ email: email.toLowerCase() });
+      if (exists) return res.status(409).json({ message: "Email already registered" });
+
+      const patient = await Patient.create({ name, email, password });
+      const token = signToken(patient._id, "patient");
+      return res.status(201).json({ token, user: formatUser(patient, "patient") });
     }
 
-    const exists = await User.findOne({ email: email.toLowerCase() });
-    if (exists) return res.status(409).json({ message: "Email already registered" });
-
-    const userData = { name, email, password, userType };
     if (userType === "doctor") {
-      userData.specialization = specialization || "General Physician";
-      userData.isAvailable    = isAvailable || is_available || false;
-      userData.availableFrom  = availableFrom || available_from || null;
-      userData.availableTo    = availableTo   || available_to   || null;
+      const exists = await Doctor.findOne({ email: email.toLowerCase() });
+      if (exists) return res.status(409).json({ message: "Email already registered" });
+
+      const doctor = await Doctor.create({
+        name, email, password,
+        specialization: specialization || "General Physician",
+        isAvailable:    isAvailable    || false,
+        availableFrom:  availableFrom  || null,
+        availableTo:    availableTo    || null,
+      });
+      const token = signToken(doctor._id, "doctor");
+      return res.status(201).json({ token, user: formatUser(doctor, "doctor") });
     }
 
-    const user = await User.create(userData);
-    const token = signToken(user._id);
-
-    res.status(201).json({ token, user: formatUser(user) });
+    return res.status(400).json({ message: "Invalid account type" });
   } catch (err) {
     console.error("signup error:", err);
     res.status(500).json({ message: err.message });
@@ -59,13 +60,14 @@ const login = async (req, res) => {
   try {
     const { email, password, userType } = req.body;
 
-    const user = await User.findOne({ email: email.toLowerCase(), userType });
-    if (!user || !(await user.matchPassword(password))) {
-      return res.status(401).json({ message: "Invalid email or password" });
-    }
+    const Model = userType === "doctor" ? Doctor : Patient;
+    const user = await Model.findOne({ email: email.toLowerCase() });
 
-    const token = signToken(user._id);
-    res.json({ token, user: formatUser(user) });
+    if (!user || !(await user.matchPassword(password)))
+      return res.status(401).json({ message: "Invalid email or password" });
+
+    const token = signToken(user._id, userType);
+    res.json({ token, user: formatUser(user, userType) });
   } catch (err) {
     console.error("login error:", err);
     res.status(500).json({ message: err.message });
@@ -74,7 +76,7 @@ const login = async (req, res) => {
 
 // GET /auth/me
 const getMe = async (req, res) => {
-  res.json({ user: formatUser(req.user) });
+  res.json({ user: formatUser(req.user, req.user.userType) });
 };
 
 module.exports = { signup, login, getMe };

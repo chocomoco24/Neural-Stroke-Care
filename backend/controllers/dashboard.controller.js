@@ -1,5 +1,5 @@
 const PatientRecord = require("../models/PatientRecord");
-const User = require("../models/User");
+const Doctor = require("../models/Doctor");
 
 
 function formatRecord(r) {
@@ -23,13 +23,13 @@ function formatRecord(r) {
 }
 
 
-function formatUser(u) {
+function formatUser(u, userType) {
   if (!u) return null;
   return {
     id:             u._id,
     name:           u.name,
     email:          u.email,
-    user_type:      u.userType,
+    user_type:      userType,
     specialization: u.specialization,
     is_available:   u.isAvailable,
     available_from: u.availableFrom,
@@ -55,16 +55,16 @@ const getPatientDashboard = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(10);
 
-    const doctors = await User
-      .find({ userType: "doctor" })
+    const doctors = await Doctor
+      .find({})
       .select("-password")
       .sort({ isAvailable: -1, name: 1 });
 
     res.json({
-      user:        formatUser(req.user),
+      user:        formatUser(req.user, req.user.userType),
       latest_test: formatRecord(latestRecord),
       history:     history.map(formatRecord),
-      doctors:     doctors.map(formatUser),
+      doctors:     doctors.map(d => formatUser(d, "doctor")),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -86,7 +86,7 @@ const getDoctorDashboard = async (req, res) => {
     }));
 
     res.json({
-      user:            formatUser(req.user),
+      user:            formatUser(req.user, req.user.userType),
       likely_patients,
     });
   } catch (err) {

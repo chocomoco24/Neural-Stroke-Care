@@ -1,8 +1,8 @@
-const User = require("../models/User");
+const Doctor = require("../models/Doctor");
 const PatientRecord = require("../models/PatientRecord");
 
 
-function formatUser(u) {
+function formatUser(u, userType = "doctor") {
   if (!u) return null;
   return {
     id:             u._id,
@@ -39,7 +39,7 @@ const listDoctors = async (req, res) => {
 // GET /doctors/specializations
 const getSpecializations = async (req, res) => {
   try {
-    const specs = await User.distinct("specialization", {
+    const specs = await Doctor.distinct("specialization", {
       userType: "doctor",
       specialization: { $ne: null },
     });
@@ -54,13 +54,13 @@ const toggleAvailability = async (req, res) => {
   try {
     const { specialization, available_from, available_to } = req.body;
 
-    const update = { isAvailable: !req.user.isAvailable };
+    const update = { isAvailable: !req.Doctor.isAvailable };
     if (specialization)  update.specialization = specialization.trim() || "General Physician";
     if (available_from)  update.availableFrom  = available_from;
     if (available_to)    update.availableTo    = available_to;
 
     const updated = await User
-      .findByIdAndUpdate(req.user._id, update, { new: true })
+      .findByIdAndUpdate(req.Doctor._id, update, { new: true })
       .select("-password");
 
     res.json({
