@@ -8,7 +8,7 @@ function formatUser(u, userType = "doctor") {
     id:             u._id,
     name:           u.name,
     email:          u.email,
-    user_type:      u.userType,
+    user_type:      userType,
     specialization: u.specialization,
     is_available:   u.isAvailable,
     available_from: u.availableFrom,
@@ -20,12 +20,12 @@ function formatUser(u, userType = "doctor") {
 const listDoctors = async (req, res) => {
   try {
     const { availability, specialization } = req.query;
-    const filter = { userType: "doctor" };
+    const filter = {};
     if (availability === "online")  filter.isAvailable = true;
     if (availability === "offline") filter.isAvailable = false;
     if (specialization) filter.specialization = { $regex: specialization, $options: "i" };
 
-    const doctors = await User
+    const doctors = await Doctor
       .find(filter)
       .select("-password")
       .sort({ isAvailable: -1, name: 1 });
@@ -40,7 +40,6 @@ const listDoctors = async (req, res) => {
 const getSpecializations = async (req, res) => {
   try {
     const specs = await Doctor.distinct("specialization", {
-      userType: "doctor",
       specialization: { $ne: null },
     });
     res.json(specs.filter(Boolean).sort());
@@ -59,12 +58,12 @@ const toggleAvailability = async (req, res) => {
     if (available_from)  update.availableFrom  = available_from;
     if (available_to)    update.availableTo    = available_to;
 
-    const updated = await User
+    const updated = await Doctor
       .findByIdAndUpdate(req.Doctor._id, update, { new: true })
       .select("-password");
 
     res.json({
-      user:    formatUser(updated),
+      user:    formatUser(updated, "doctor"),
       message: `Now ${update.isAvailable ? "Online" : "Offline"}`,
     });
   } catch (err) {
@@ -77,7 +76,7 @@ const listPatients = async (req, res) => {
   try {
     const records = await PatientRecord
       .find()
-      .populate({ path: "patientId", match: { userType: "patient" }, select: "name email" })
+      .populate({ path: "patientId", select: "name email" })
       .sort({ createdAt: -1 });
 
     res.json({ records: records.filter((r) => r.patientId !== null) });
