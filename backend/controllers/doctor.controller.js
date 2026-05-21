@@ -1,14 +1,14 @@
-const Doctor = require("../models/Doctor");
+const User = require("../models/User");
 const PatientRecord = require("../models/PatientRecord");
 
 
-function formatUser(u, userType = "doctor") {
+function formatUser(u) {
   if (!u) return null;
   return {
     id:             u._id,
     name:           u.name,
     email:          u.email,
-    user_type:      userType,
+    user_type:      u.userType,
     specialization: u.specialization,
     is_available:   u.isAvailable,
     available_from: u.availableFrom,
@@ -20,12 +20,12 @@ function formatUser(u, userType = "doctor") {
 const listDoctors = async (req, res) => {
   try {
     const { availability, specialization } = req.query;
-    const filter = {};
+    const filter = { userType: "doctor" };
     if (availability === "online")  filter.isAvailable = true;
     if (availability === "offline") filter.isAvailable = false;
     if (specialization) filter.specialization = { $regex: specialization, $options: "i" };
 
-    const doctors = await Doctor
+    const doctors = await User
       .find(filter)
       .select("-password")
       .sort({ isAvailable: -1, name: 1 });
@@ -39,7 +39,8 @@ const listDoctors = async (req, res) => {
 // GET /doctors/specializations
 const getSpecializations = async (req, res) => {
   try {
-    const specs = await Doctor.distinct("specialization", {
+    const specs = await User.distinct("specialization", {
+      userType: "doctor",
       specialization: { $ne: null },
     });
     res.json(specs.filter(Boolean).sort());
@@ -53,17 +54,17 @@ const toggleAvailability = async (req, res) => {
   try {
     const { specialization, available_from, available_to } = req.body;
 
-    const update = { isAvailable: !req.Doctor.isAvailable };
+    const update = { isAvailable: !req.user.isAvailable };
     if (specialization)  update.specialization = specialization.trim() || "General Physician";
     if (available_from)  update.availableFrom  = available_from;
     if (available_to)    update.availableTo    = available_to;
 
-    const updated = await Doctor
-      .findByIdAndUpdate(req.Doctor._id, update, { new: true })
+    const updated = await User
+      .findByIdAndUpdate(req.user._id, update, { new: true })
       .select("-password");
 
     res.json({
-      user:    formatUser(updated, "doctor"),
+      user:    formatUser(updated),
       message: `Now ${update.isAvailable ? "Online" : "Offline"}`,
     });
   } catch (err) {
@@ -76,7 +77,7 @@ const listPatients = async (req, res) => {
   try {
     const records = await PatientRecord
       .find()
-      .populate({ path: "patientId", select: "name email" })
+      .populate({ path: "patientId", match: { userType: "patient" }, select: "name email" })
       .sort({ createdAt: -1 });
 
     res.json({ records: records.filter((r) => r.patientId !== null) });
