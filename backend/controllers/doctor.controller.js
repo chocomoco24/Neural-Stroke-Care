@@ -2,7 +2,7 @@ const Doctor = require("../models/Doctor");
 const PatientRecord = require("../models/PatientRecord");
 
 
-function formatUser(u, userType = "doctor") {
+function formatUser(u, userType = "Doctor") {
   if (!u) return null;
   return {
     id:             u._id,
