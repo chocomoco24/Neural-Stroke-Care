@@ -18,18 +18,20 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('nsc_user');
-      window.location.href = '/';
-    }
-    return Promise.reject(err);
-  }
+    const isAuthEndpoint = err.config?.url?.includes('/auth/login') || err.config?.url?.includes('/auth/signup');
+    if (err.response?.status === 401 && !isAuthEndpoint) 
+      {
+        localStorage.removeItem('token');
+        localStorage.removeItem('nsc_user');
+        window.location.href = '/';
+      }
+      return Promise.reject(err);
+  }  
 );
 
 // Auth
 export const authService = {
-  login:  (userType, email, password) =>
+  login: (userType, email, password) =>
     api.post('/auth/login', { email, password, userType }),
 
   signup: (userType, data) =>
@@ -52,14 +54,14 @@ export const predictionService = {
 // Dashboard 
 export const dashboardService = {
   patientDashboard: () => api.get('/dashboard/patient'),
-  doctorDashboard:  () => api.get('/dashboard/doctor'),
+  doctorDashboard: () => api.get('/dashboard/doctor'),
 };
 
 // Doctors 
 export const doctorService = {
-  list:               (params) => api.get('/doctors', { params }),
-  toggleAvailability: (data)   => api.post('/doctors/toggle-availability', data),
-  specializations:    ()       => api.get('/doctors/specializations'),
+  list: (params) => api.get('/doctors', { params }),
+  toggleAvailability: (data) => api.post('/doctors/toggle-availability', data),
+  specializations: () => api.get('/doctors/specializations'),
 };
 
 //Patients 
