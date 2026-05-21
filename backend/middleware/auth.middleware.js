@@ -13,11 +13,11 @@ const protect = async (req, res, next) => {
 
     // decoded.role tells us which collection to query
     if (decoded.role === "doctor") {
-      req.user = await Doctor.findById(decoded.id).select("-password");
-      if (req.user) req.user.userType = "doctor";   // keep userType so authorise() still works
+      req.Doctor = await Doctor.findById(decoded.id).select("-password");
+      if (req.Doctor) req.Doctor.userType = "doctor";   // keep userType so authorise() still works
     } else {
-      req.user = await Patient.findById(decoded.id).select("-password");
-      if (req.user) req.user.userType = "patient";
+      req.Patient = await Patient.findById(decoded.id).select("-password");
+      if (req.Patient) req.Patient.userType = "patient";
     }
 
     if (!req.user) return res.status(401).json({ message: "User not found" });
