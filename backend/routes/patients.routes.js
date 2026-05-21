@@ -7,7 +7,7 @@ router.get("/", protect, authorise("doctor"), async (req, res) => {
   try {
     const records = await PatientRecord
       .find()
-      .populate({ path: "patientId", match: { userType: "patient" }, select: "name email" })
+      .populate({ path: "patientId", model: "Patient", select: "name email" })
       .sort({ createdAt: -1 });
 
     const formatted = records
