@@ -47,6 +47,8 @@ export default function Navbar() {
               {user?.user_type === 'patient' && (
                 <li><NavLink to="/history" onClick={close}>History</NavLink></li>
               )}
+              <li><NavLink to="/appointments" onClick={close}>Appointments</NavLink></li>
+              
               <li>
                 <button onClick={handleLogout} className="btn btn-ghost btn-sm" style={{ marginLeft: '0.5rem' }}>
                   <i className="fas fa-sign-out-alt" /> Logout

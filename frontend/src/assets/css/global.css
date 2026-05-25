@@ -612,6 +612,90 @@ body {
 .text-danger { color: var(--clr-danger); }
 .text-success { color: var(--clr-success); }
 
+/* Appointment Modal */
+.appt-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.appt-modal {
+  background: var(--clr-surface);
+  border: 1px solid var(--clr-border);
+  border-radius: var(--radius-xl);
+  padding: 2.25rem 2rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  animation: modalPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.88) translateY(12px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.appt-modal-icon {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, var(--clr-primary), var(--clr-accent));
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  color: #fff;
+  margin: 0 auto 1.25rem;
+}
+
+.appt-modal-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.appt-modal-body {
+  color: var(--clr-muted);
+  font-size: 0.97rem;
+  line-height: 1.6;
+  margin-bottom: 0.4rem;
+}
+
+.appt-modal-spec {
+  font-size: 0.82rem;
+  color: var(--clr-accent);
+  margin-bottom: 1.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.appt-modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.appt-btn-no, .appt-btn-yes { min-width: 110px; justify-content: center; }
+
+.btn-submitted {
+  background: linear-gradient(135deg, rgba(34,197,94,0.2), rgba(34,197,94,0.1));
+  color: #4ade80;
+  border: 1.5px solid rgba(34,197,94,0.4);
+  cursor: not-allowed;
+}
+
 /*   Animations   */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(18px); }

@@ -36,11 +36,12 @@ function AppRoutes() {
           {/* Protected – any logged-in user */}
           <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/result"    element={<ProtectedRoute><Result /></ProtectedRoute>} />
-          <Route path="/doctors"   element={<ProtectedRoute><Doctors /></ProtectedRoute>} />
+          
 
           {/* Protected – patients only */}
           <Route path="/assessment" element={<ProtectedRoute role="patient"><Assessment /></ProtectedRoute>} />
           <Route path="/history"    element={<ProtectedRoute role="patient"><TestHistory /></ProtectedRoute>} />
+          <Route path="/doctors"   element={<ProtectedRoute><Doctors /></ProtectedRoute>} />
 
           {/* Protected – doctors only */}
           <Route path="/patients" element={<ProtectedRoute role="doctor"><Patients /></ProtectedRoute>} />

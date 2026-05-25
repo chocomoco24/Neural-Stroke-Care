@@ -2,31 +2,85 @@ import { useEffect, useState } from 'react';
 import { doctorService } from '../services/api';
 import Spinner from '../components/Spinner';
 
+function AppointmentModal({ doctor, onConfirm, onCancel }) {
+  return (
+    <div className="appt-overlay" onClick={onCancel}>
+      <div className="appt-modal" onClick={e => e.stopPropagation()}>
+        <div className="appt-modal-icon">
+          <i className="fas fa-calendar-check" />
+        </div>
+        <h3 className="appt-modal-title">Confirm Appointment</h3>
+        <p className="appt-modal-body">
+          Are you willing to take an appointment for{' '}
+          <strong style={{ color: 'var(--clr-primary)' }}>Dr. {doctor.name}</strong>?
+        </p>
+        {doctor.specialization && (
+          <p className="appt-modal-spec">{doctor.specialization}</p>
+        )}
+        <div className="appt-modal-actions">
+          <button className="btn btn-ghost appt-btn-no" onClick={onCancel}>
+            <i className="fas fa-times" /> No
+          </button>
+          <button className="btn btn-primary appt-btn-yes" onClick={onConfirm}>
+            <i className="fas fa-check" /> Yes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DoctorCard({ doctor }) {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
   const timings =
     doctor.available_from && doctor.available_to
       ? `${doctor.available_from} – ${doctor.available_to}`
       : 'Timings not set';
+
   return (
-    <div className="doctor-card">
-      <div className="doctor-card-top">
-        <div>
-          <h6 style={{ fontWeight: 700, marginBottom: '0.15rem' }}>{doctor.name}</h6>
-          <div className="text-muted text-small">{doctor.email}</div>
+    <>
+      <div className="doctor-card">
+        <div className="doctor-card-top">
+          <div>
+            <h6 style={{ fontSize: '25px', marginBottom: '0.15rem' }}>{doctor.name}</h6>
+            <div className="text-muted text-small">{doctor.email}</div>
+          </div>
+          <span className={`avail-pill ${doctor.is_available ? 'online' : 'offline'}`}>
+            {doctor.is_available ? 'Online' : 'Offline'}
+          </span>
         </div>
-        <span className={`avail-pill ${doctor.is_available ? 'online' : 'offline'}`}>
-          {doctor.is_available ? 'Online' : 'Offline'}
-        </span>
+        <div style={{ marginTop: '0.5rem' }}>
+          <strong className="text-small">Specialization:</strong>{' '}
+          <span className="text-muted text-small">{doctor.specialization || 'General Physician'}</span>
+        </div>
+        <div>
+          <strong className="text-small">Timings:</strong>{' '}
+          <span className="text-muted text-small">{timings}</span>
+          <button
+            className={`btn btn-full appointment ${submitted ? 'btn-submitted' : 'btn-primary'}`}
+            style={{ marginTop: '0.8rem' }}
+            disabled={submitted}
+            onClick={() => !submitted && setModalOpen(true)}
+          >
+            {submitted ? (
+              <><i className="fas fa-check-circle" /> Application Submitted</>
+            ) : (
+              <><i className="fas fa-calendar-plus" /> Appointment</>
+            )}
+          </button>
+        </div>
       </div>
-      <div style={{ marginTop: '0.5rem' }}>
-        <strong className="text-small">Specialization:</strong>{' '}
-        <span className="text-muted text-small">{doctor.specialization || 'General Physician'}</span>
-      </div>
-      <div>
-        <strong className="text-small">Timings:</strong>{' '}
-        <span className="text-muted text-small">{timings}</span>
-      </div>
-    </div>
+
+      {modalOpen && (
+        <AppointmentModal
+          doctor={doctor}
+          onConfirm={() => { setSubmitted(true); setModalOpen(false); }}
+          onCancel={() => setModalOpen(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -40,7 +94,7 @@ export default function Doctors() {
   useEffect(() => {
     doctorService.specializations()
       .then(r => setSpecs(r.data || []))
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
