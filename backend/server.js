@@ -27,14 +27,20 @@ const app = express();
 app.set("trust proxy", 1);
 
 // ── Security & core middleware ──────────────────────────────────
+// Allowed browser origins: localhost for dev + FRONTEND_URL for prod
+// (comma-separated to allow multiple, e.g. a custom domain + *.vercel.app).
+const allowedOrigins = [
+  "http://localhost:3000",
+  ...(process.env.FRONTEND_URL
+    ? process.env.FRONTEND_URL.split(",").map((s) => s.trim()).filter(Boolean)
+    : []),
+];
+
 app.use(helmet());
 app.use(cors({
   origin: (origin, callback) => {
-    const allowed = [
-      "http://localhost:3000",
-      "https://neural-stroke-care.vercel.app",
-    ];
-    if (!origin || allowed.includes(origin)) {
+    // Non-browser clients (no Origin header) and allow-listed origins pass.
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
