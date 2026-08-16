@@ -33,7 +33,7 @@ export default function Login() {
     setLoading(true);
     try {
       const res = await authService.login(userType, form.email, form.password);
-      login(res.data.user, res.data.token);
+      login(res.data.user);
       flash(`Welcome back, ${res.data.user.name}!`, 'success');
       navigate('/dashboard');
     } catch (err) {

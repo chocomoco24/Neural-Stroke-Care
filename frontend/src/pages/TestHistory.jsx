@@ -55,7 +55,7 @@ export default function TestHistory() {
               </thead>
               <tbody>
                 {tests.map(t => (
-                  <tr key={t._id}>
+                  <tr key={t.id}>
                     <td>
                       <strong>{new Date(t.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}</strong>
                       <div className="text-muted text-small">

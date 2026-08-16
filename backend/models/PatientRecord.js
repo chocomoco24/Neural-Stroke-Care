@@ -1,34 +1,49 @@
-const mongoose = require("mongoose");
+const { DataTypes, Model } = require("sequelize");
+const sequelize = require("../config/database");
 
-const patientRecordSchema = new mongoose.Schema(
+class PatientRecord extends Model {}
+
+PatientRecord.init(
   {
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
+    },
     patientId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Patient",
-      required: true,
-      index: true,
+      type: DataTypes.INTEGER.UNSIGNED,
+      allowNull: false,
     },
     predictionResult: {
-      type: String,
-      enum: ["Likely", "Not Likely"],
-      required: true,
-      index: true,
+      type: DataTypes.ENUM("Likely", "Not Likely"),
+      allowNull: false,
     },
-    riskProbability: { type: Number, default: null },
+    riskProbability: {
+      type: DataTypes.FLOAT,
+      allowNull: true,
+    },
 
     // Patient data captured at time of prediction
-    gender: { type: String },
-    age: { type: Number },
-    hypertension: { type: Number },
-    heartDisease: { type: Number },
-    everMarried: { type: String },
-    workType: { type: String },
-    residenceType: { type: String },
-    avgGlucoseLevel: { type: Number },
-    bmi: { type: Number },
-    smokingStatus: { type: String },
+    gender: { type: DataTypes.STRING, allowNull: true },
+    age: { type: DataTypes.INTEGER, allowNull: true },
+    hypertension: { type: DataTypes.INTEGER, allowNull: true },
+    heartDisease: { type: DataTypes.INTEGER, allowNull: true },
+    everMarried: { type: DataTypes.STRING, allowNull: true },
+    workType: { type: DataTypes.STRING, allowNull: true },
+    residenceType: { type: DataTypes.STRING, allowNull: true },
+    avgGlucoseLevel: { type: DataTypes.FLOAT, allowNull: true },
+    bmi: { type: DataTypes.FLOAT, allowNull: true },
+    smokingStatus: { type: DataTypes.STRING, allowNull: true },
   },
-  { timestamps: true }
+  {
+    sequelize,
+    modelName: "PatientRecord",
+    tableName: "patient_records",
+    indexes: [
+      { fields: ["patient_id"] },
+      { fields: ["prediction_result"] },
+    ],
+  }
 );
 
-module.exports = mongoose.model("PatientRecord", patientRecordSchema);
+module.exports = PatientRecord;

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useFlash } from '../context/FlashContext';
-import { dashboardService, doctorService } from '../services/api';
+import { dashboardService, doctorService, appointmentService } from '../services/api';
 import Spinner from '../components/Spinner';
 
 export default function DoctorDashboard() {
@@ -16,24 +16,35 @@ export default function DoctorDashboard() {
     available_to: user?.available_to || '',
   });
   const [toggling, setToggling] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     dashboardService.doctorDashboard()
       .then(r => setData(r.data))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
-  async function handleToggle(e) {
+  async function handleSaveProfile(e) {
     e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await doctorService.updateProfile(avail);
+      login(res.data.user);
+      flash('Profile updated.', 'success');
+    } catch {
+      flash('Failed to update profile.', 'danger');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleToggle() {
     setToggling(true);
     try {
-      const res = await doctorService.toggleAvailability(avail);
+      const res = await doctorService.toggleAvailability();
       login(res.data.user);
-      flash(`Availability updated to ${res.data.user.is_available ? 'Online' : 'Offline'}.`, 'success');
-      // refresh data
-      const dash = await dashboardService.doctorDashboard();
-      setData(dash.data);
+      flash(`You are now ${res.data.user.is_available ? 'Online' : 'Offline'}.`, 'success');
     } catch {
       flash('Failed to update availability.', 'danger');
     } finally {
@@ -71,7 +82,7 @@ export default function DoctorDashboard() {
           <i className="fas fa-clock" style={{ color: 'var(--clr-accent)', marginRight: '0.5rem' }} />
           Availability Settings
         </h5>
-        <form onSubmit={handleToggle}>
+        <form onSubmit={handleSaveProfile}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
             <div className="form-group">
               <label className="form-label">Specialization</label>
@@ -92,14 +103,24 @@ export default function DoctorDashboard() {
                 onChange={e => setAvail(a => ({ ...a, available_to: e.target.value }))} />
             </div>
             <div className="form-group" style={{ alignSelf: 'flex-end' }}>
-              <button type="submit" className="btn btn-primary btn-full" disabled={toggling}>
-                {toggling
-                  ? <><i className="fas fa-circle-notch fa-spin" /> Updating…</>
-                  : <><i className={`fas ${isOnline ? 'fa-toggle-off' : 'fa-toggle-on'}`} /> Go {isOnline ? 'Offline' : 'Online'}</>}
+              <button type="submit" className="btn btn-ghost btn-full" disabled={saving}>
+                {saving
+                  ? <><i className="fas fa-circle-notch fa-spin" /> Saving…</>
+                  : <><i className="fas fa-save" /> Save Profile</>}
               </button>
             </div>
           </div>
         </form>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', borderTop: '1px solid var(--clr-border, #e5e7eb)', paddingTop: '1rem', flexWrap: 'wrap' }}>
+          <span className="text-muted text-small">
+            Patients can request appointments while you are <strong>{isOnline ? 'Online' : 'Offline'}</strong>.
+          </span>
+          <button type="button" className="btn btn-primary" disabled={toggling} onClick={handleToggle}>
+            {toggling
+              ? <><i className="fas fa-circle-notch fa-spin" /> Updating…</>
+              : <><i className={`fas ${isOnline ? 'fa-toggle-off' : 'fa-toggle-on'}`} /> Go {isOnline ? 'Offline' : 'Online'}</>}
+          </button>
+        </div>
       </div>
 
       {/* Likely stroke patients table */}

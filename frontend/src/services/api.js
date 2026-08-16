@@ -5,28 +5,22 @@ const BASE = process.env.REACT_APP_API_BASE_URL;
 const api = axios.create({
   baseURL: BASE,
   headers: { 'Content-Type': 'application/json' },
+  // Send/receive the httpOnly auth cookie on every request.
+  withCredentials: true,
 });
 
-// Auto-attach JWT token to every request
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
-  return config;
-});
-
-// Auto-logout if token expires
+// Auto-logout if the session cookie is missing/expired
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    const isAuthEndpoint = err.config?.url?.includes('/auth/login') || err.config?.url?.includes('/auth/signup');
-    if (err.response?.status === 401 && !isAuthEndpoint) 
-      {
-        localStorage.removeItem('token');
-        localStorage.removeItem('nsc_user');
-        window.location.href = '/';
-      }
-      return Promise.reject(err);
-  }  
+    const isAuthEndpoint =
+      err.config?.url?.includes('/auth/login') || err.config?.url?.includes('/auth/signup');
+    if (err.response?.status === 401 && !isAuthEndpoint) {
+      localStorage.removeItem('nsc_user');
+      window.location.href = '/';
+    }
+    return Promise.reject(err);
+  }
 );
 
 // Auth
@@ -37,11 +31,7 @@ export const authService = {
   signup: (userType, data) =>
     api.post('/auth/signup', { ...data, userType }),
 
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('nsc_user');
-    return Promise.resolve();
-  },
+  logout: () => api.post('/auth/logout').catch(() => {}),
 
   me: () => api.get('/auth/me'),
 };
@@ -60,7 +50,8 @@ export const dashboardService = {
 // Doctors 
 export const doctorService = {
   list: (params) => api.get('/doctors', { params }),
-  toggleAvailability: (data) => api.post('/doctors/toggle-availability', data),
+  toggleAvailability: () => api.post('/doctors/toggle-availability'),
+  updateProfile: (data) => api.patch('/doctors/profile', data),
   specializations: () => api.get('/doctors/specializations'),
 };
 
@@ -77,6 +68,15 @@ export const historyService = {
 // Hospitals
 export const hospitalService = {
   nearby: (lat, lon) => api.get('/hospitals', { params: { lat, lon } }),
+};
+
+//Appointment
+export const appointmentService = {
+  request:   (doctorId)         => api.post('/appointments', { doctorId }),
+  listDoctor: ()                => api.get('/appointments'),
+  listPatient: ()               => api.get('/appointments/mine'),
+  update:    (id, status, appointmentDate, appointmentTime) =>
+    api.patch(`/appointments/${id}`, { status, appointmentDate, appointmentTime }),
 };
 
 export default api;

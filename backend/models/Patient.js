@@ -1,40 +1,61 @@
-const mongoose = require("mongoose");
+const { DataTypes, Model } = require("sequelize");
 const bcrypt = require("bcryptjs");
+const sequelize = require("../config/database");
 
-const patientSchema = new mongoose.Schema(
+class Patient extends Model {
+  // Instance method to check password
+  async matchPassword(plain) {
+    return bcrypt.compare(plain, this.password);
+  }
+
+  // Never leak the password hash
+  toJSON() {
+    const values = { ...this.get() };
+    delete values.password;
+    return values;
+  }
+}
+
+Patient.init(
   {
-    name: { type: String, required: true, trim: true },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-      index: true,
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
     },
-    password: { type: String, required: true },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: { notEmpty: true },
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      set(value) {
+        this.setDataValue("email", String(value).toLowerCase().trim());
+      },
+      validate: { isEmail: true },
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
   },
-  { timestamps: true }
+  {
+    sequelize,
+    modelName: "Patient",
+    tableName: "patients",
+    hooks: {
+      // Hash password before insert/update when it changed
+      beforeSave: async (patient) => {
+        if (patient.changed("password")) {
+          const salt = await bcrypt.genSalt(10);
+          patient.password = await bcrypt.hash(patient.password, salt);
+        }
+      },
+    },
+  }
 );
 
-// Hash password before save
-patientSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
-// Instance method to check password
-patientSchema.methods.matchPassword = async function (plain) {
-  return bcrypt.compare(plain, this.password);
-};
-
-// Never return the password
-patientSchema.set("toJSON", {
-  transform: (_doc, ret) => {
-    delete ret.password;
-    return ret;
-  },
-});
-
-module.exports = mongoose.model("Patient", patientSchema);
+module.exports = Patient;

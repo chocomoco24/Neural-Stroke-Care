@@ -3,14 +3,13 @@ const {
   listDoctors,
   getSpecializations,
   toggleAvailability,
-  listPatients,
+  updateProfile,
 } = require("../controllers/doctor.controller");
 const { protect, authorise } = require("../middleware/auth.middleware");
 
-router.get("/",                     protect, listDoctors);
-router.get("/specializations",      protect, getSpecializations);
-router.get("/patients",             protect, authorise("doctor"), listPatients);
+router.get("/", protect, listDoctors);
+router.get("/specializations", protect, getSpecializations);
 router.post("/toggle-availability", protect, authorise("doctor"), toggleAvailability);
-router.patch("/availability",       protect, authorise("doctor"), toggleAvailability);
+router.patch("/profile", protect, authorise("doctor"), updateProfile);
 
 module.exports = router;

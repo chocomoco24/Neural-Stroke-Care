@@ -1,88 +1,78 @@
-const Doctor = require("../models/Doctor");
-const Patient = require("../models/Patient");
-const PatientRecord = require("../models/PatientRecord");
-
-function formatDoctor(u) {
-  if (!u) return null;
-  return {
-    id:             u._id,
-    name:           u.name,
-    email:          u.email,
-    user_type:      "doctor",
-    specialization: u.specialization,
-    is_available:   u.isAvailable,
-    available_from: u.availableFrom,
-    available_to:   u.availableTo,
-  };
-}
+const { Op } = require("sequelize");
+const { Doctor } = require("../models");
+const { formatUser } = require("../utils/format");
+const { serverError } = require("../utils/http");
 
 // GET /doctors
 const listDoctors = async (req, res) => {
   try {
     const { availability, specialization } = req.query;
-    const filter = {};
-    if (availability === "online")  filter.isAvailable = true;
-    if (availability === "offline") filter.isAvailable = false;
-    if (specialization) filter.specialization = { $regex: specialization, $options: "i" };
+    const where = {};
+    if (availability === "online") where.isAvailable = true;
+    if (availability === "offline") where.isAvailable = false;
+    if (specialization) where.specialization = { [Op.like]: `%${specialization}%` };
 
-    const doctors = await Doctor
-      .find(filter)
-      .select("-password")
-      .sort({ isAvailable: -1, name: 1 });
+    const doctors = await Doctor.findAll({
+      where,
+      attributes: { exclude: ["password"] },
+      order: [["isAvailable", "DESC"], ["name", "ASC"]],
+    });
 
-    res.json(doctors.map(formatDoctor));
+    res.json(doctors.map((d) => formatUser(d, "doctor")));
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    serverError(res, err);
   }
 };
 
 // GET /doctors/specializations
 const getSpecializations = async (req, res) => {
   try {
-    const specs = await Doctor.distinct("specialization", {
-      specialization: { $ne: null },
+    const rows = await Doctor.findAll({
+      attributes: [[Doctor.sequelize.fn("DISTINCT", Doctor.sequelize.col("specialization")), "specialization"]],
+      where: { specialization: { [Op.ne]: null } },
+      raw: true,
     });
-    res.json(specs.filter(Boolean).sort());
+    const specs = rows.map((r) => r.specialization).filter(Boolean).sort();
+    res.json(specs);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    serverError(res, err);
   }
 };
 
-// POST /doctors/toggle-availability  (also handles PATCH /doctors/availability)
+// POST /doctors/toggle-availability — flip Online/Offline ONLY
 const toggleAvailability = async (req, res) => {
+  try {
+    req.user.isAvailable = !req.user.isAvailable;
+    await req.user.save();
+
+    res.json({
+      user: formatUser(req.user, "doctor"),
+      message: `Now ${req.user.isAvailable ? "Online" : "Offline"}`,
+    });
+  } catch (err) {
+    serverError(res, err);
+  }
+};
+
+// PATCH /doctors/profile — update specialization / hours WITHOUT changing availability
+const updateProfile = async (req, res) => {
   try {
     const { specialization, available_from, available_to } = req.body;
 
-    const update = { isAvailable: !req.user.isAvailable };
-    if (specialization)  update.specialization = specialization.trim() || "General Physician";
-    if (available_from)  update.availableFrom  = available_from;
-    if (available_to)    update.availableTo    = available_to;
+    if (specialization !== undefined)
+      req.user.specialization = specialization.trim() || "General Physician";
+    if (available_from !== undefined) req.user.availableFrom = available_from || null;
+    if (available_to !== undefined) req.user.availableTo = available_to || null;
 
-    const updated = await Doctor
-      .findByIdAndUpdate(req.user._id, update, { new: true })
-      .select("-password");
+    await req.user.save();
 
     res.json({
-      user:    formatDoctor(updated),
-      message: `Now ${update.isAvailable ? "Online" : "Offline"}`,
+      user: formatUser(req.user, "doctor"),
+      message: "Profile updated",
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    serverError(res, err);
   }
 };
 
-// GET /doctors/patients  (doctor only)
-const listPatients = async (req, res) => {
-  try {
-    const records = await PatientRecord
-      .find()
-      .populate({ path: "patientId", model: "Patient", select: "name email" })
-      .sort({ createdAt: -1 });
-
-    res.json({ records: records.filter((r) => r.patientId !== null) });
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-};
-
-module.exports = { listDoctors, getSpecializations, toggleAvailability, listPatients };
+module.exports = { listDoctors, getSpecializations, toggleAvailability, updateProfile };

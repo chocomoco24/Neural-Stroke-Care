@@ -1,35 +1,36 @@
 const router = require("express").Router();
 const { protect, authorise } = require("../middleware/auth.middleware");
-const PatientRecord = require("../models/PatientRecord");
+const { PatientRecord, Patient } = require("../models");
+const { serverError } = require("../utils/http");
 
-// GET /patients  — doctor only: all patient records
+// GET /patients — doctor only: all patient prediction records
 router.get("/", protect, authorise("doctor"), async (req, res) => {
   try {
-    const records = await PatientRecord
-      .find()
-      .populate({ path: "patientId", model: "Patient", select: "name email" })
-      .sort({ createdAt: -1 });
+    const records = await PatientRecord.findAll({
+      include: [{ model: Patient, as: "patient", attributes: ["name", "email"] }],
+      order: [["createdAt", "DESC"]],
+    });
 
     const formatted = records
-      .filter((r) => r.patientId !== null)
+      .filter((r) => r.patient !== null)
       .map((r) => ({
-        id:                r._id,
-        patient_name:      r.patientId?.name  || "—",
-        patient_email:     r.patientId?.email || "—",
+        id: r.id,
+        patient_name: r.patient?.name || "—",
+        patient_email: r.patient?.email || "—",
         prediction_result: r.predictionResult,
-        risk_probability:  r.riskProbability,
-        age:               r.age,
-        bmi:               r.bmi,
+        risk_probability: r.riskProbability,
+        age: r.age,
+        bmi: r.bmi,
         avg_glucose_level: r.avgGlucoseLevel,
-        hypertension:      r.hypertension,
-        heart_disease:     r.heartDisease,
-        smoking_status:    r.smokingStatus,
-        created_at:        r.createdAt,
+        hypertension: r.hypertension,
+        heart_disease: r.heartDisease,
+        smoking_status: r.smokingStatus,
+        created_at: r.createdAt,
       }));
 
     res.json(formatted);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    serverError(res, err);
   }
 });
 

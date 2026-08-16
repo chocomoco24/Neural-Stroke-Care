@@ -32,7 +32,7 @@ export default function PatientDashboard() {
   useEffect(() => {
     dashboardService.patientDashboard()
       .then(r => setData(r.data))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setLoading(false));
   }, []);
 
@@ -44,6 +44,7 @@ export default function PatientDashboard() {
 
   return (
     <div className="page-shell">
+      {/* Welcome */}
       <div className="welcome-card fade-up">
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', marginBottom: '0.4rem' }}>
           Welcome back, {user?.name}!

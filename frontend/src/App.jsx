@@ -16,6 +16,7 @@ import Result from './pages/Result';
 import Doctors from './pages/Doctors';
 import Patients from './pages/Patients';
 import TestHistory from './pages/TestHistory';
+import Appointments from './pages/Appointments';
 
 import './assets/css/global.css';
 
@@ -42,6 +43,7 @@ function AppRoutes() {
           <Route path="/assessment" element={<ProtectedRoute role="patient"><Assessment /></ProtectedRoute>} />
           <Route path="/history"    element={<ProtectedRoute role="patient"><TestHistory /></ProtectedRoute>} />
           <Route path="/doctors"   element={<ProtectedRoute><Doctors /></ProtectedRoute>} />
+          <Route path="/appointments" element={<ProtectedRoute><Appointments /></ProtectedRoute>} />
 
           {/* Protected – doctors only */}
           <Route path="/patients" element={<ProtectedRoute role="doctor"><Patients /></ProtectedRoute>} />

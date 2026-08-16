@@ -1,8 +1,11 @@
 import { createContext, useContext, useState, useCallback } from 'react';
+import { authService } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  // The JWT lives in an httpOnly cookie (not readable by JS). We keep only the
+  // non-sensitive user profile in localStorage for UI state across reloads.
   const [user, setUser] = useState(() => {
     try {
       const stored = localStorage.getItem('nsc_user');
@@ -10,17 +13,15 @@ export function AuthProvider({ children }) {
     } catch { return null; }
   });
 
-  // login now accepts BOTH the user object AND the JWT token
-  const login = useCallback((userData, token) => {
+  const login = useCallback((userData) => {
     setUser(userData);
     localStorage.setItem('nsc_user', JSON.stringify(userData));
-    if (token) localStorage.setItem('token', token);
   }, []);
 
   const logout = useCallback(() => {
+    authService.logout(); // clears the httpOnly cookie server-side
     setUser(null);
     localStorage.removeItem('nsc_user');
-    localStorage.removeItem('token');
   }, []);
 
   return (

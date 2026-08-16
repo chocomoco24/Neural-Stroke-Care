@@ -57,8 +57,8 @@ Patients fill out a health assessment form, receive an instant AI-driven risk pr
 | Layer | Technology |
 |---|---|
 | **Frontend** | React 18, React Router v6, Axios, Context API |
-| **Backend** | Node.js, Express.js, Mongoose, JWT, bcryptjs |
-| **Database** | MongoDB |
+| **Backend** | Node.js, Express.js, Sequelize, JWT, bcryptjs, helmet, express-validator |
+| **Database** | MySQL 8 |
 | **ML Service** | Python 3.11, FastAPI, scikit-learn, pandas, joblib, uvicorn |
 | **Dev Tools** | nodemon, concurrently, morgan |
 
@@ -93,8 +93,8 @@ The application is composed of **three independently runnable services** that co
                          │
                          ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                       MONGODB                                │
-│            Collections: users, patientrecords                │
+│                        MYSQL 8                               │
+│      Tables: patients, doctors, patient_records, appointments │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -113,18 +113,26 @@ Neural_Stroke_Care_MERN/
 │   ├── package.json
 │   │
 │   ├── controllers/
-│   │   ├── auth.controller.js        # Signup, login, getMe
-│   │   ├── dashboard.controller.js   # Patient & doctor dashboard data
-│   │   ├── doctor.controller.js      # Doctor listing, availability toggle
-│   │   ├── hospital.controller.js    # Hospital listing
-│   │   └── prediction.controller.js  # Stroke prediction & history
+│   │   ├── auth.controller.js         # Signup, login, getMe
+│   │   ├── dashboard.controller.js    # Patient & doctor dashboard data
+│   │   ├── doctor.controller.js       # Doctor listing, availability, profile
+│   │   ├── appointment.controller.js  # Appointment request / accept / reject
+│   │   ├── hospital.controller.js     # Hospital listing
+│   │   └── prediction.controller.js   # Stroke prediction & history
+│   │
+│   ├── config/
+│   │   └── database.js          # Sequelize (MySQL) connection
 │   │
 │   ├── middleware/
-│   │   └── auth.middleware.js    # JWT protect + role authorise
+│   │   ├── auth.middleware.js    # JWT protect + role authorise
+│   │   └── validate.js           # express-validator result handler
 │   │
 │   ├── models/
-│   │   ├── User.js               # Mongoose User schema
-│   │   └── PatientRecord.js      # Mongoose PatientRecord schema
+│   │   ├── index.js              # Sequelize init + associations
+│   │   ├── Patient.js            # Patient model
+│   │   ├── Doctor.js             # Doctor model
+│   │   ├── PatientRecord.js      # Prediction record model
+│   │   └── Appointment.js        # Appointment model
 │   │
 │   └── routes/
 │       ├── auth.routes.js
@@ -196,8 +204,8 @@ Stores both patients and doctors in a single collection, differentiated by `user
 | `isAvailable` | Boolean | Doctor-only availability flag |
 | `availableFrom` | String | Doctor-only start time `"HH:MM"` |
 | `availableTo` | String | Doctor-only end time `"HH:MM"` |
-| `createdAt` | Date | Auto-managed by Mongoose timestamps |
-| `updatedAt` | Date | Auto-managed by Mongoose timestamps |
+| `createdAt` | Date | Auto-managed by Sequelize timestamps |
+| `updatedAt` | Date | Auto-managed by Sequelize timestamps |
 
 **Pre-save hook:** Passwords are automatically hashed with bcrypt (salt rounds: 10) before every save.
 
@@ -363,7 +371,7 @@ User visits /
                │
        ML returns result + probability
                │
-       Saved to PatientRecord (MongoDB)
+       Saved to PatientRecord (MySQL)
                │
          /result page
        Display risk + recommendations
@@ -422,7 +430,7 @@ Patient submits Assessment form
           │
     { result, probability }
           │
-    Save PatientRecord to MongoDB
+    Save PatientRecord to MySQL
           │
     Return 201 { result, probability, record }
           │
@@ -440,7 +448,7 @@ Make sure you have the following installed:
 | **Node.js** | v18+ | https://nodejs.org |
 | **npm** | v9+ | Bundled with Node.js |
 | **Python** | 3.11 | https://python.org |
-| **MongoDB** | 6+ (local) or Atlas URI | https://mongodb.com |
+| **MySQL** | 8+ (local server) | https://dev.mysql.com/downloads |
 
 ---
 
@@ -455,8 +463,14 @@ Create this file before running the backend:
 PORT=5000
 NODE_ENV=development
 
-# MongoDB
-MONGO_URI=mongodb://localhost:27017/strokeapp
+# MySQL
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_NAME=strokeapp
+DB_USER=root
+DB_PASSWORD=your_mysql_password
+# Set to "true" once to let Sequelize ALTER tables to match models, then back to false.
+DB_SYNC_ALTER=false
 
 # Auth
 JWT_SECRET=replace_with_a_long_random_secret_string
@@ -465,6 +479,22 @@ JWT_EXPIRES_IN=7d
 # ML Microservice URL
 ML_API_URL=http://localhost:5001
 ```
+
+> Create the database once before first run:
+> ```sql
+> CREATE DATABASE IF NOT EXISTS strokeapp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+> ```
+> **Development:** tables are auto-created by Sequelize on startup.
+> **Production** (`NODE_ENV=production`): auto-sync is disabled — run migrations instead:
+> ```bash
+> cd backend && npm run db:migrate
+> ```
+
+### Production notes
+- Set `NODE_ENV=production`. This enables secure httpOnly auth cookies (`SameSite=None; Secure`), hides internal error details, and disables DB auto-sync.
+- Serve both frontend and backend over **HTTPS** — the auth cookie is `Secure` in production and won't be sent over http.
+- Ensure the frontend origin is in the backend CORS allow-list (`backend/server.js`).
+- Keep the ML service (`:5001`) on a private network — it must not be publicly reachable.
 
 ### `frontend/.env`
 
@@ -600,7 +630,7 @@ cd Neural-Stroke-Care
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 
-# Edit backend/.env with your MongoDB URL and JWT secret
+# Edit backend/.env with your MySQL credentials and JWT secret
 
 # 3. Install all Node dependencies
 npm install
@@ -671,5 +701,5 @@ Please ensure your code follows the existing style conventions and that all thre
 ---
 
 <p align="center">
-  Built with ❤️ using MongoDB · Express · React · Node.js · FastAPI
+  Built with ❤️ using MySQL · Express · React · Node.js · FastAPI
 </p>

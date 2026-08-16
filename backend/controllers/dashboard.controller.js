@@ -1,39 +1,6 @@
-const PatientRecord = require("../models/PatientRecord");
-const Doctor = require("../models/Doctor");
-
-function formatRecord(r) {
-  if (!r) return null;
-  return {
-    id:                r._id,
-    prediction_result: r.predictionResult,
-    risk_probability:  r.riskProbability,
-    age:               r.age,
-    bmi:               r.bmi,
-    avg_glucose_level: r.avgGlucoseLevel,
-    hypertension:      r.hypertension,
-    heart_disease:     r.heartDisease,
-    smoking_status:    r.smokingStatus,
-    gender:            r.gender,
-    ever_married:      r.everMarried,
-    work_type:         r.workType,
-    residence_type:    r.residenceType,
-    created_at:        r.createdAt,
-  };
-}
-
-function formatUser(u, userType) {
-  if (!u) return null;
-  return {
-    id:             u._id,
-    name:           u.name,
-    email:          u.email,
-    user_type:      userType || u.userType,
-    specialization: u.specialization,
-    is_available:   u.isAvailable,
-    available_from: u.availableFrom,
-    available_to:   u.availableTo,
-  };
-}
+const { PatientRecord, Doctor, Patient } = require("../models");
+const { formatRecord, formatUser } = require("../utils/format");
+const { serverError } = require("../utils/http");
 
 // GET /dashboard  — auto-redirects by role
 const getDashboard = async (req, res) => {
@@ -44,51 +11,54 @@ const getDashboard = async (req, res) => {
 // GET /dashboard/patient
 const getPatientDashboard = async (req, res) => {
   try {
-    const latestRecord = await PatientRecord
-      .findOne({ patientId: req.user._id })
-      .sort({ createdAt: -1 });
-
-    const history = await PatientRecord
-      .find({ patientId: req.user._id })
-      .sort({ createdAt: -1 })
-      .limit(10);
-
-    const doctors = await Doctor
-      .find({})
-      .select("-password")
-      .sort({ isAvailable: -1, name: 1 });
+    const [latestRecord, history, doctors] = await Promise.all([
+      PatientRecord.findOne({
+        where: { patientId: req.user.id },
+        order: [["createdAt", "DESC"]],
+      }),
+      PatientRecord.findAll({
+        where: { patientId: req.user.id },
+        order: [["createdAt", "DESC"]],
+        limit: 10,
+      }),
+      Doctor.findAll({
+        attributes: { exclude: ["password"] },
+        order: [["isAvailable", "DESC"], ["name", "ASC"]],
+      }),
+    ]);
 
     res.json({
-      user:        formatUser(req.user, "patient"),
+      user: formatUser(req.user, "patient"),
       latest_test: formatRecord(latestRecord),
-      history:     history.map(formatRecord),
-      doctors:     doctors.map((d) => formatUser(d, "doctor")),
+      history: history.map(formatRecord),
+      doctors: doctors.map((d) => formatUser(d, "doctor")),
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    serverError(res, err);
   }
 };
 
 // GET /dashboard/doctor
 const getDoctorDashboard = async (req, res) => {
   try {
-    const likelyRecords = await PatientRecord
-      .find({ predictionResult: "Likely" })
-      .populate({ path: "patientId", model: "Patient", select: "name email" })
-      .sort({ createdAt: -1 });
+    const likelyRecords = await PatientRecord.findAll({
+      where: { predictionResult: "Likely" },
+      include: [{ model: Patient, as: "patient", attributes: ["name", "email"] }],
+      order: [["createdAt", "DESC"]],
+    });
 
     const likely_patients = likelyRecords.map((r) => ({
       ...formatRecord(r),
-      patient_name:  r.patientId?.name  || "—",
-      patient_email: r.patientId?.email || "—",
+      patient_name: r.patient?.name || "—",
+      patient_email: r.patient?.email || "—",
     }));
 
     res.json({
-      user:            formatUser(req.user, "doctor"),
+      user: formatUser(req.user, "doctor"),
       likely_patients,
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    serverError(res, err);
   }
 };
 

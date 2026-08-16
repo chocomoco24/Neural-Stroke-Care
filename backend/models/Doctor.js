@@ -1,44 +1,76 @@
-const mongoose = require("mongoose");
+const { DataTypes, Model } = require("sequelize");
 const bcrypt = require("bcryptjs");
+const sequelize = require("../config/database");
 
-const doctorSchema = new mongoose.Schema(
+class Doctor extends Model {
+  async matchPassword(plain) {
+    return bcrypt.compare(plain, this.password);
+  }
+
+  toJSON() {
+    const values = { ...this.get() };
+    delete values.password;
+    return values;
+  }
+}
+
+Doctor.init(
   {
-    name: { type: String, required: true, trim: true },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-      index: true,
+    id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true,
     },
-    password: { type: String, required: true },
-    specialization: { type: String, default: "General Physician" },
-    isAvailable: { type: Boolean, default: false },
-    availableFrom: { type: String, default: null }, // "HH:MM"
-    availableTo: { type: String, default: null },   // "HH:MM"
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: { notEmpty: true },
+    },
+    email: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+      set(value) {
+        this.setDataValue("email", String(value).toLowerCase().trim());
+      },
+      validate: { isEmail: true },
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    specialization: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: "General Physician",
+    },
+    isAvailable: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+    availableFrom: {
+      type: DataTypes.STRING, // "HH:MM"
+      allowNull: true,
+    },
+    availableTo: {
+      type: DataTypes.STRING, // "HH:MM"
+      allowNull: true,
+    },
   },
-  { timestamps: true }
+  {
+    sequelize,
+    modelName: "Doctor",
+    tableName: "doctors",
+    hooks: {
+      beforeSave: async (doctor) => {
+        if (doctor.changed("password")) {
+          const salt = await bcrypt.genSalt(10);
+          doctor.password = await bcrypt.hash(doctor.password, salt);
+        }
+      },
+    },
+  }
 );
 
-// Hash password before save
-doctorSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-});
-
-// Instance method to check password
-doctorSchema.methods.matchPassword = async function (plain) {
-  return bcrypt.compare(plain, this.password);
-};
-
-// Never return the password
-doctorSchema.set("toJSON", {
-  transform: (_doc, ret) => {
-    delete ret.password;
-    return ret;
-  },
-});
-
-module.exports = mongoose.model("Doctor", doctorSchema);
+module.exports = Doctor;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { doctorService } from '../services/api';
+import { doctorService, appointmentService } from '../services/api';
 import Spinner from '../components/Spinner';
 
 function AppointmentModal({ doctor, onConfirm, onCancel }) {
@@ -11,7 +11,7 @@ function AppointmentModal({ doctor, onConfirm, onCancel }) {
         </div>
         <h3 className="appt-modal-title">Confirm Appointment</h3>
         <p className="appt-modal-body">
-          Are you willing to take an appointment for{' '}
+          Request an appointment with{' '}
           <strong style={{ color: 'var(--clr-primary)' }}>Dr. {doctor.name}</strong>?
         </p>
         {doctor.specialization && (
@@ -39,6 +39,16 @@ function DoctorCard({ doctor }) {
       ? `${doctor.available_from} – ${doctor.available_to}`
       : 'Timings not set';
 
+  async function handleConfirm() {
+    try {
+      await appointmentService.request(doctor.id);
+      setSubmitted(true);
+      setModalOpen(false);
+    } catch {
+      setModalOpen(false);
+    }
+  }
+
   return (
     <>
       <div className="doctor-card">
@@ -65,9 +75,9 @@ function DoctorCard({ doctor }) {
             onClick={() => !submitted && setModalOpen(true)}
           >
             {submitted ? (
-              <><i className="fas fa-check-circle" /> Application Submitted</>
+              <><i className="fas fa-check-circle" /> Request Sent</>
             ) : (
-              <><i className="fas fa-calendar-plus" /> Appointment</>
+              <><i className="fas fa-calendar-plus" /> Request Appointment</>
             )}
           </button>
         </div>
@@ -76,7 +86,7 @@ function DoctorCard({ doctor }) {
       {modalOpen && (
         <AppointmentModal
           doctor={doctor}
-          onConfirm={() => { setSubmitted(true); setModalOpen(false); }}
+          onConfirm={handleConfirm}
           onCancel={() => setModalOpen(false)}
         />
       )}
@@ -112,7 +122,6 @@ export default function Doctors() {
 
   return (
     <div className="page-shell">
-      {/* Filter bar */}
       <div className="surface mb-3 fade-up">
         <h4 style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', marginBottom: '1rem' }}>
           <i className="fas fa-user-md" style={{ color: 'var(--clr-primary)', marginRight: '0.5rem' }} />
@@ -145,7 +154,6 @@ export default function Doctors() {
         </form>
       </div>
 
-      {/* Results */}
       {loading ? (
         <Spinner text="Loading doctors…" />
       ) : doctors.length === 0 ? (

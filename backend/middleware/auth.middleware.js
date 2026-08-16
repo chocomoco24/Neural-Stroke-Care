@@ -1,36 +1,40 @@
 const jwt = require("jsonwebtoken");
-const Patient = require("../models/Patient");
-const Doctor = require("../models/Doctor");
+const { Patient, Doctor } = require("../models");
+
+const EXCLUDE_PASSWORD = { attributes: { exclude: ["password"] } };
 
 /**
  * Verifies the JWT from the Authorization header.
- * Attaches `req.user` (Mongoose document, no password) and `req.userType`.
+ * Attaches `req.user` (Sequelize instance, no password) and `req.userType`.
  */
 const protect = async (req, res, next) => {
   try {
+    // Prefer the httpOnly cookie; fall back to a Bearer header (e.g. API clients).
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    const headerToken =
+      authHeader && authHeader.startsWith("Bearer ") ? authHeader.split(" ")[1] : null;
+    const token = req.cookies?.token || headerToken;
+
+    if (!token) {
       return res.status(401).json({ message: "Not authorised, no token" });
     }
 
-    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Support both old tokens (no userType) and new tokens (with userType)
     let user = null;
     let userType = decoded.userType;
 
     if (userType === "patient") {
-      user = await Patient.findById(decoded.id).select("-password");
+      user = await Patient.findByPk(decoded.id, EXCLUDE_PASSWORD);
     } else if (userType === "doctor") {
-      user = await Doctor.findById(decoded.id).select("-password");
+      user = await Doctor.findByPk(decoded.id, EXCLUDE_PASSWORD);
     } else {
-      // Legacy token fallback: search both collections
-      user = await Patient.findById(decoded.id).select("-password");
+      // Legacy token fallback: search both tables
+      user = await Patient.findByPk(decoded.id, EXCLUDE_PASSWORD);
       if (user) {
         userType = "patient";
       } else {
-        user = await Doctor.findById(decoded.id).select("-password");
+        user = await Doctor.findByPk(decoded.id, EXCLUDE_PASSWORD);
         if (user) userType = "doctor";
       }
     }
@@ -39,8 +43,7 @@ const protect = async (req, res, next) => {
 
     req.user = user;
     req.userType = userType;
-    // Attach userType onto the user object for backward compat with controllers
-    req.user.userType = userType;
+    req.user.userType = userType; // backward compat for controllers
 
     next();
   } catch (err) {

@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
-const Patient = require("../models/Patient");
-const Doctor = require("../models/Doctor");
+const { Patient, Doctor } = require("../models");
+const { serverError } = require("../utils/http");
+const { setAuthCookie, clearAuthCookie } = require("../utils/cookie");
 
 const signToken = (id, userType) =>
   jwt.sign({ id, userType }, process.env.JWT_SECRET, {
@@ -11,10 +12,10 @@ function formatUser(u, userType) {
   const obj = u.toJSON ? u.toJSON() : { ...u };
   return {
     ...obj,
-    user_type:      userType,
-    is_available:   u.isAvailable,
+    user_type: userType,
+    is_available: u.isAvailable,
     available_from: u.availableFrom,
-    available_to:   u.availableTo,
+    available_to: u.availableTo,
   };
 }
 
@@ -33,32 +34,34 @@ const signup = async (req, res) => {
       return res.status(400).json({ message: "Invalid account type" });
     }
 
+    const normalisedEmail = email.toLowerCase().trim();
+
     if (userType === "patient") {
-      const exists = await Patient.findOne({ email: email.toLowerCase() });
+      const exists = await Patient.findOne({ where: { email: normalisedEmail } });
       if (exists) return res.status(409).json({ message: "Email already registered" });
 
-      const patient = await Patient.create({ name, email, password });
-      const token = signToken(patient._id, "patient");
-      return res.status(201).json({ token, user: formatUser(patient, "patient") });
+      const patient = await Patient.create({ name, email: normalisedEmail, password });
+      setAuthCookie(res, signToken(patient.id, "patient"));
+      return res.status(201).json({ user: formatUser(patient, "patient") });
     }
 
     // doctor
-    const exists = await Doctor.findOne({ email: email.toLowerCase() });
+    const exists = await Doctor.findOne({ where: { email: normalisedEmail } });
     if (exists) return res.status(409).json({ message: "Email already registered" });
 
     const doctor = await Doctor.create({
-      name, email, password,
+      name,
+      email: normalisedEmail,
+      password,
       specialization: specialization || "General Physician",
-      isAvailable:    isAvailable || is_available || false,
-      availableFrom:  availableFrom || available_from || null,
-      availableTo:    availableTo   || available_to   || null,
+      isAvailable: isAvailable || is_available || false,
+      availableFrom: availableFrom || available_from || null,
+      availableTo: availableTo || available_to || null,
     });
-    const token = signToken(doctor._id, "doctor");
-    return res.status(201).json({ token, user: formatUser(doctor, "doctor") });
-
+    setAuthCookie(res, signToken(doctor.id, "doctor"));
+    return res.status(201).json({ user: formatUser(doctor, "doctor") });
   } catch (err) {
-    console.error("signup error:", err);
-    res.status(500).json({ message: err.message });
+    serverError(res, err);
   }
 };
 
@@ -73,17 +76,16 @@ const login = async (req, res) => {
     }
 
     const Model = userType === "patient" ? Patient : Doctor;
-    const user = await Model.findOne({ email: email.toLowerCase() });
+    const user = await Model.findOne({ where: { email: email.toLowerCase().trim() } });
 
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
-    const token = signToken(user._id, userType);
-    res.json({ token, user: formatUser(user, userType) });
+    setAuthCookie(res, signToken(user.id, userType));
+    res.json({ user: formatUser(user, userType) });
   } catch (err) {
-    console.error("login error:", err);
-    res.status(500).json({ message: err.message });
+    serverError(res, err);
   }
 };
 
@@ -92,4 +94,10 @@ const getMe = async (req, res) => {
   res.json({ user: formatUser(req.user, req.userType) });
 };
 
-module.exports = { signup, login, getMe };
+// POST /auth/logout — clear the auth cookie
+const logout = async (_req, res) => {
+  clearAuthCookie(res);
+  res.json({ message: "Logged out" });
+};
+
+module.exports = { signup, login, getMe, logout };

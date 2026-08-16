@@ -3,17 +3,13 @@
   "private": true,
   "description": "Local dev only — not used in deployment",
   "scripts": {
-    "ml-setup": "cd ml-service && python -m venv .venv && .venv\\Scripts\\pip install -r requirements.txt",
-    "ml-service": "cd ml-service && .venv\\Scripts\\uvicorn ml_api:app --host 0.0.0.0 --port 5001",
-    "ml-broken": "cd ml-service && rmdir /s /q .venv && python -m venv .venv && .venv\\Scripts\\pip install -r requirements.txt",
+    "ml-setup": "cd ml-service && python -m venv venv && venv\\Scripts\\pip install -r requirements.txt",
+    "ml-service": "cd ml-service && venv\\Scripts\\uvicorn ml_api:app --host 0.0.0.0 --port 5001",
     "frontend": "cd frontend && npm start",
     "backend": "cd backend && npm run dev",
     "dev": "concurrently \"npm run ml-service\" \"npm run backend\" \"npm run frontend\""
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
-  },
-  "dependencies": {
-    "mongodb": "^7.2.0"
   }
 }
